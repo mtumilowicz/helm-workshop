@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.deployment.name }}
+  labels:
+    app: helmworkshop
+spec:
+  replicas: {{ .Values.deployment.replicaCount }}
+  selector:
+    matchLabels:
+      app: helmworkshop
+  template:
+    metadata:
+      labels:
+        app: helmworkshop
+    spec:
+      containers:
+        - name: "{{ .Values.deployment.name }}container"
+          image: "{{ .Values.deployment.image.app }}:{{ .Values.deployment.image.version }}"
+          imagePullPolicy: {{ .Values.deployment.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
