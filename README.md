@@ -9,6 +9,8 @@
     * [Introduction to Helm | Kubernetes Tutorial | Beginners Guide](https://www.youtube.com/watch?v=5_J7RWLLVeQ)
     * https://helm.sh/docs/howto/charts_tips_and_tricks/
     * [An Introduction to Helm - Matt Farina, Samsung SDS & Josh Dolitsky, Blood Orange](https://www.youtube.com/watch?v=Zzwq9FmZdsU)
+    * [Delve into Helm: Advanced DevOps [I] - Lachlan Evenson & Adam Reese, Deis](https://www.youtube.com/watch?v=cZ1S2Gp47ng)
+    * https://helm.sh/docs/
 
 * questions
     what is helm
@@ -19,6 +21,7 @@
             * example
                 * deploying elastic stack for logging
                 * needs: stateful set, config map, k8s user with permissions, secret, services
+                    * and you want to rollback them as a whole
                 * it standard so someone creates the yml files once, package them and make available somewhere
                 * that package is known as helm charts
                 * public reporitories: https://artifacthub.io/
@@ -161,9 +164,11 @@
 * dependencies, versioning
 * Helm Chart structure
     * Chart.yaml -> meta info about chart
+        * a description of the package
     * values.yaml -> values for the template files
         * like default, could be overridden
             * helm install --values=my-values.yaml <chartname>
+            * example: dev.yaml, prod.yaml, stage.yaml
     * charts folder -> chart dependencies
     * templates -> templates
 * Automatically Roll Deployments
@@ -174,3 +179,17 @@
           annotations:
             checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
 * upgrade vs install
+* create a functional test (even if simple)
+    annotations:
+    "helm.sh/hook": test-success
+* include
+    * The include function allows you to bring in another template, and then pass the results to other template functions.
+    * value: {{ include "mytpl" . | lower | quote }} // includes a template called mytpl, then lowercases the result, then wraps that in double quotes
+    * Go provides a way of including one template in another using a built-in template directive.
+        * However, the built-in function cannot be used in Go template pipelines.
+* required
+    * The required function allows you to declare a particular values entry as required for template rendering.
+    * value: {{ required "A valid .Values.who entry required!" .Values.who }}
+* Install or Upgrade a Release with One Command
+    * helm upgrade --install <release name> --values <values file> <chart directory>
+* https://helm.sh/docs/topics/charts/
