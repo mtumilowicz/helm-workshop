@@ -192,4 +192,107 @@
     * value: {{ required "A valid .Values.who entry required!" .Values.who }}
 * Install or Upgrade a Release with One Command
     * helm upgrade --install <release name> --values <values file> <chart directory>
-* https://helm.sh/docs/topics/charts/
+* charts
+    * Helm uses a packaging format called charts. A chart is a collection of files that describe a related set of Kubernetes resources.
+    * structure
+        wordpress/
+          Chart.yaml          # A YAML file containing information about the chart
+          LICENSE             # OPTIONAL: A plain text file containing the license for the chart
+          README.md           # OPTIONAL: A human-readable README file
+          values.yaml         # The default configuration values for this chart
+          values.schema.json  # OPTIONAL: A JSON Schema for imposing a structure on the values.yaml file
+          charts/             # A directory containing any charts upon which this chart depends.
+          crds/               # Custom Resource Definitions
+          templates/          # A directory of templates that, when combined with values,
+                              # will generate valid Kubernetes manifest files.
+          templates/NOTES.txt # OPTIONAL: A plain text file containing short usage notes
+    * structure of chart.yaml
+        apiVersion: The chart API version (required)
+        name: The name of the chart (required)
+        version: A SemVer 2 version (required)
+        kubeVersion: A SemVer range of compatible Kubernetes versions (optional)
+        description: A single-sentence description of this project (optional)
+        type: The type of the chart (optional)
+        keywords:
+          - A list of keywords about this project (optional)
+        home: The URL of this projects home page (optional)
+        sources:
+          - A list of URLs to source code for this project (optional)
+        dependencies: # A list of the chart requirements (optional)
+          - name: The name of the chart (nginx)
+            version: The version of the chart ("1.2.3")
+            repository: (optional) The repository URL ("https://example.com/charts") or alias ("@repo-name")
+            condition: (optional) A yaml path that resolves to a boolean, used for enabling/disabling charts (e.g. subchart1.enabled )
+            tags: # (optional)
+              - Tags can be used to group charts for enabling/disabling together
+            import-values: # (optional)
+              - ImportValues holds the mapping of source values to parent key to be imported. Each item can be a string or pair of child/parent sublist items.
+            alias: (optional) Alias to be used for the chart. Useful when you have to add the same chart multiple times
+        maintainers: # (optional)
+          - name: The maintainers name (required for each maintainer)
+            email: The maintainers email (optional for each maintainer)
+            url: A URL for the maintainer (optional for each maintainer)
+        icon: A URL to an SVG or PNG image to be used as an icon (optional).
+        appVersion: The version of the app that this contains (optional). Needn't be SemVer. Quotes recommended.
+        deprecated: Whether this chart is deprecated (optional, boolean)
+        annotations:
+          example: A list of annotations keyed by name (optional).
+    * versioning
+        * Every chart must have a version number.
+        * apiVersion field should be v2 for Helm charts that require at least Helm 3
+        * appVersion Field
+            * field is informational, and has no impact on chart version calculations
+        * kubeVersion field can define semver constraints on supported Kubernetes versions
+    * types
+        * type field defines the type of chart
+        * application and library
+        * Application is the default type and it is the standard chart which can be operated on fully
+        * library chart provides utilities or functions for the chart builder
+    * Dependencies
+        * one chart may depend on any number of other charts
+        * These dependencies can be dynamically linked using the dependencies field in Chart.yaml or brought in to the charts/ directory and managed manually
+        * example
+            dependencies:
+              - name: apache
+                version: 1.2.3
+                repository: https://example.com/charts
+              - name: mysql
+                version: 3.2.1
+                repository: https://another.example.com/charts
+        * helm dependency update and it will use your dependency file to download all the specified charts into your charts/ directory for you
+        * then
+            charts/
+              apache-1.2.3.tgz
+              mysql-3.2.1.tgz
+        * If more control over dependencies is desired, these dependencies can be expressed explicitly by copying the dependency charts into the charts/ directory.
+        * when Helm installs/upgrades charts, the Kubernetes objects from the charts and all its dependencies are
+
+          aggregated into a single set; then
+          sorted by type followed by name; and then
+          created/updated in that order.
+    * Values for the templates are supplied two ways:
+
+      Chart developers may supply a file called values.yaml inside of a chart. This file can contain default values.
+      Chart users may supply a YAML file that contains values. This can be provided on the command line with helm install.
+    * Chart Repositories
+        * is an HTTP server that houses one or more packaged charts
+        * helm can be used to manage local chart directories, when it comes to sharing charts, the preferred mechanism is a chart repository
+    * hooks
+        * Helm provides a hook mechanism to allow chart developers to intervene at certain points in a release's life cycle
+        * example
+            * Load a ConfigMap or Secret during install before any other charts are loaded.
+            * Run a Job before deleting a release to gracefully take a service out of rotation before removing it.
+            * pre-install: 	Executes after templates are rendered, but before any resources are created in Kubernetes
+            * post-install	Executes after all resources are loaded into Kubernetes
+        * Practically speaking, this means that if you create resources in a hook, you cannot rely upon helm uninstall to remove the resources. To destroy such resources, you need to either add a custom helm.sh/hook-delete-policy annotation to the hook template file, or set the time to live (TTL) field of a Job resource.
+    * tests
+        * A test in a helm chart lives under the templates/ directory and is a job definition that specifies a container with a given command to run. The container should exit successfully (exit 0) for a test to be considered a success.
+        * Example tests:
+
+          Validate that your configuration from the values.yaml file was properly injected.
+          Make sure your username and password work correctly
+          Make sure an incorrect username and password does not work
+    * library charts
+        * A library chart is a type of Helm chart that defines chart primitives or definitions which can be shared by Helm templates in other charts
+        * The library chart was introduced in Helm 3 to formally recognize common or helper charts
+        * https://helm.sh/docs/topics/library_charts/
