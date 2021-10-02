@@ -3,7 +3,7 @@ deployment:
   replicaCount: 1
   image:
     app: helm-workshop
-    version: latest
+    version: 1.0-SNAPSHOT
     pullPolicy: IfNotPresent
 
 service:
@@ -14,4 +14,4 @@ service:
   nodePort: 31234
 
 appConfig:
-  appName: "helmworkshop"
+  appName: helmworkshop
