@@ -47,6 +47,7 @@
   * helm install helmworkshopchart .
   * helm uninstall helmworkshopchart
   * helm upgrade helmworkshopchart
+  * helm get manifest mydemo
   * kubectl get services
   * kubectl get pods
 * helm
@@ -296,3 +297,56 @@
         * A library chart is a type of Helm chart that defines chart primitives or definitions which can be shared by Helm templates in other charts
         * The library chart was introduced in Helm 3 to formally recognize common or helper charts
         * https://helm.sh/docs/topics/library_charts/
+
+* Helm is a tool for managing Kubernetes packages called charts. Helm can do the following:
+
+  Create new charts from scratch
+  Package charts into chart archive (tgz) files
+  Interact with chart repositories where charts are stored
+  Install and uninstall charts into an existing Kubernetes cluster
+  Manage the release cycle of charts that have been installed with Helm
+* For Helm, there are three important concepts:
+
+  The chart is a bundle of information necessary to create an instance of a Kubernetes application.
+  The config contains configuration information that can be merged into a packaged chart to create a releasable object.
+  A release is a running instance of a chart, combined with a specific config.
+* Components
+    * The Helm Client is a command-line client for end users. The client is responsible for the following:
+
+      Local chart development
+      Managing repositories
+      Managing releases
+      Interfacing with the Helm library
+      Sending charts to be installed
+      Requesting upgrading or uninstalling of existing releases
+    * The Helm Library provides the logic for executing all Helm operations. It interfaces with the Kubernetes API server and provides the following capability:
+
+      Combining a chart and configuration to build a release
+      Installing charts into Kubernetes, and providing the subsequent release object
+      Upgrading and uninstalling charts by interacting with Kubernetes
+* best practices
+    * Chart names must be lower case letters and numbers. Words may be separated with dashes (-)
+    * Variable names should begin with a lowercase letter, and words should be separated with camelcase
+    * The easiest way to avoid type conversion errors is to be explicit about strings, and implicit about everything else.
+        * Or, in short, quote all strings.
+        * For example, foo: false is not the same as foo: "false"
+    * Template file names should use dashed notation (my-example-configmap.yaml), not camelcase.
+    * Each resource definition should be in its own template file.
+    * Template file names should reflect the resource kind in the name. e.g. foo-pod.yaml, bar-svc.yaml
+    * Defined templates (templates created inside a {{ define }} directive) are globally accessible. That means that a chart and all of its subcharts will have access to all of the templates created with {{ define }}.
+
+      For that reason, all defined template names should be namespaced.
+    * Templates should be indented using two spaces (never tabs).
+    * An item of metadata should be a label under the following conditions:
+
+      It is used by Kubernetes to identify this resource
+      It is useful to expose to operators for the purpose of querying the system.
+      For example, we suggest using helm.sh/chart: NAME-VERSION as a label so that operators can conveniently find all of the instances of a particular chart to use.
+    * If an item of metadata is not used for querying, it should be set as an annotation instead.
+    * labels
+        app.kubernetes.io/name	REC	This should be the app name, reflecting the entire app. Usually {{ template "name" . }} is used for this. This is used by many Kubernetes manifests, and is not Helm-specific.
+        helm.sh/chart	REC	This should be the chart name and version: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}.
+        app.kubernetes.io/managed-by	REC	This should always be set to {{ .Release.Service }}. It is for finding all things managed by Helm.
+        app.kubernetes.io/instance	REC	This should be the {{ .Release.Name }}. It aids in differentiating between different instances of the same application.
+        app.kubernetes.io/version	OPT	The version of the app and can be set to {{ .Chart.AppVersion }}.
+        app.kubernetes.io/component	OPT	This is a common label for marking the different roles that pieces may play in an application. For example, app.kubernetes.io/component: frontend.
