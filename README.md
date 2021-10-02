@@ -24,156 +24,118 @@
         * values
     * familiarize with basic commands for releasing app
 
+## introduction
+* suppose we are deploying elastic stack for logging
+    * needs: stateful set, config map, k8s user with permissions, secret, services
+        * and you want to rollback them as a whole
+    * maybe someone could create the yaml files once, package them and make available somewhere
+        * that package is known as helm charts
+    * public repositories: https://artifacthub.io/
+    * private repositories: share in organisation
+* suppose we have many microservices in the cluster and across different environments (dev, stage, prod)
+    * with very similar deployments (ex. apart from name and image)
+    * a lot of copy-paste and duplication
+    * maybe someone could create a template and make available somewhere
+        * then we fill that template with values
+        * that template engine is know as helm
+
 ## helm
-* what is helm
-    * package manager for k8s
-        * package manager - software tool that automates the process of installing, upgrading, configuring, and removing
-        software in a consistent manner
-        * package yaml files and distribute them in public / private repositories
-        * example
-            * deploying elastic stack for logging
-            * needs: stateful set, config map, k8s user with permissions, secret, services
-                * and you want to rollback them as a whole
-            * it standard so someone creates the yml files once, package them and make available somewhere
-            * that package is known as helm charts
-            * public reporitories: https://artifacthub.io/
-            * private repositories: share in organisation
-    * templating engine
-        * suppose we have many microservices in the cluster and deployment of each of them
-        are almost the same, apart from name and image
-        * if you create next ms you will have to copy-paste all
-        * helm install <chartname> <releaseName> --values valuesForOtherService
-    * same apps across different environments (dev, stage, prod)
+* package manager - software tool that automates the process of installing, upgrading, configuring, and removing
+software in a consistent manner
+* is a package manager for k8s
+    * package yaml files and distribute them in public / private repositories
     * manage your k8s deployments
     * teardown and create deployments with one command
-    * "package manager" for k8s
+* is a templating engine
+* tasks
+    * create new charts from scratch
+    * package charts into chart archive (tgz) files
+    * interact with chart repositories where charts are stored
+    * install and uninstall charts into an existing Kubernetes cluster
+    * manage the release cycle of charts that have been installed with Helm
+* components
+    * Helm Client
+        * a command-line client for end user
+        * responsible for:
+            * local chart development
+            * managing repositories
+            * managing releases
+            * interfacing with the Helm library
+            * sending charts to be installed
+            * requesting upgrading or uninstalling of existing releases
+    * Helm Library
+        * provides the logic for executing all Helm operations
+        * interfaces with the Kubernetes API server
+        * provides the following capability:
+            * combining a chart and configuration to build a release
+            * installing charts into Kubernetes, and providing the subsequent release object
+            * upgrading and uninstalling charts by interacting with Kubernetes
 * helm2 vs helm3
-  * most apparent change is the removal of Tiller
-    * Tiller was the server-side component which is used to maintain the state of helm release
-    * Tiller is an in-cluster server that interacts with the Helm client, and interfaces with the Kubernetes API server
-    * after Kubernetes 1.6, RBAC is enabled by default, so there is no need for Helm to keep
-    * track of who is allowed to installs what, as the same job can now be done natively by
-    * Kubernetes and that’s why in Helm 3 tiller was removed completely
-* Helm is a tool for managing Kubernetes packages called charts. Helm can do the following:
+    * most apparent change is the removal of Tiller
+        * Tiller was the server-side component which is used to maintain the state of helm release
+        * Tiller = in-cluster server that interacts with the Helm client, and interfaces with the Kubernetes API server
 
-  Create new charts from scratch
-  Package charts into chart archive (tgz) files
-  Interact with chart repositories where charts are stored
-  Install and uninstall charts into an existing Kubernetes cluster
-  Manage the release cycle of charts that have been installed with Helm
-* For Helm, there are three important concepts:
-
-  The chart is a bundle of information necessary to create an instance of a Kubernetes application.
-  The config contains configuration information that can be merged into a packaged chart to create a releasable object.
-  A release is a running instance of a chart, combined with a specific config.
-* Components
-    * The Helm Client is a command-line client for end users. The client is responsible for the following:
-
-      Local chart development
-      Managing repositories
-      Managing releases
-      Interfacing with the Helm library
-      Sending charts to be installed
-      Requesting upgrading or uninstalling of existing releases
-    * The Helm Library provides the logic for executing all Helm operations. It interfaces with the Kubernetes API server and provides the following capability:
-
-      Combining a chart and configuration to build a release
-      Installing charts into Kubernetes, and providing the subsequent release object
-      Upgrading and uninstalling charts by interacting with Kubernetes
-
-## structure
-* Helm Chart structure
-    * Chart.yaml -> meta info about chart
-        * a description of the package
-    * values.yaml -> values for the template files
-        * like default, could be overridden
-            * helm install --values=my-values.yaml <chartname>
-            * example: dev.yaml, prod.yaml, stage.yaml
-    * charts folder -> chart dependencies
-    * templates -> templates
+## project structure
+* `Chart.yaml`
+    * meta info about chart
+    * description of the package
+* `values.yaml`
+    * values for the template files
+    * is like a set of defaults
+        * could be overridden
+            * `helm install --values=my-values.yaml <chartname>`
+            * example: `dev.yaml`, `prod.yaml`, `stage.yaml`
+* `charts` -> chart dependencies
+* `templates`
+    * templates that, when combined with values, will generate valid Kubernetes manifest files
+    * most files are treated as if they contain Kubernetes manifests
+    * files whose name begins with an underscore `_` are assumed to not have a manifest inside
+        * used to store partials and helpers
+        * example: `_helpers.tpl`
 
 ## helm charts
-* what are helm charts
+* is
     * unit of deployment
     * set of yaml files
-* charts
-    * Helm uses a packaging format called charts. A chart is a collection of files that describe a related set of Kubernetes resources.
-    * structure
-        wordpress/
-          Chart.yaml          # A YAML file containing information about the chart
-          LICENSE             # OPTIONAL: A plain text file containing the license for the chart
-          README.md           # OPTIONAL: A human-readable README file
-          values.yaml         # The default configuration values for this chart
-          values.schema.json  # OPTIONAL: A JSON Schema for imposing a structure on the values.yaml file
-          charts/             # A directory containing any charts upon which this chart depends.
-          crds/               # Custom Resource Definitions
-          templates/          # A directory of templates that, when combined with values,
-                              # will generate valid Kubernetes manifest files.
-          templates/NOTES.txt # OPTIONAL: A plain text file containing short usage notes
-    * structure of chart.yaml
-        apiVersion: The chart API version (required)
-        name: The name of the chart (required)
-        version: A SemVer 2 version (required)
-        kubeVersion: A SemVer range of compatible Kubernetes versions (optional)
-        description: A single-sentence description of this project (optional)
-        type: The type of the chart (optional)
-        keywords:
-          - A list of keywords about this project (optional)
-        home: The URL of this projects home page (optional)
-        sources:
-          - A list of URLs to source code for this project (optional)
-        dependencies: # A list of the chart requirements (optional)
-          - name: The name of the chart (nginx)
-            version: The version of the chart ("1.2.3")
-            repository: (optional) The repository URL ("https://example.com/charts") or alias ("@repo-name")
-            condition: (optional) A yaml path that resolves to a boolean, used for enabling/disabling charts (e.g. subchart1.enabled )
-            tags: # (optional)
-              - Tags can be used to group charts for enabling/disabling together
-            import-values: # (optional)
-              - ImportValues holds the mapping of source values to parent key to be imported. Each item can be a string or pair of child/parent sublist items.
-            alias: (optional) Alias to be used for the chart. Useful when you have to add the same chart multiple times
-        maintainers: # (optional)
-          - name: The maintainers name (required for each maintainer)
-            email: The maintainers email (optional for each maintainer)
-            url: A URL for the maintainer (optional for each maintainer)
-        icon: A URL to an SVG or PNG image to be used as an icon (optional).
-        appVersion: The version of the app that this contains (optional). Needn't be SemVer. Quotes recommended.
-        deprecated: Whether this chart is deprecated (optional, boolean)
-        annotations:
-          example: A list of annotations keyed by name (optional).
-    * versioning
-        * Every chart must have a version number.
-        * apiVersion field should be v2 for Helm charts that require at least Helm 3
-        * appVersion Field
-            * field is informational, and has no impact on chart version calculations
-        * kubeVersion field can define semver constraints on supported Kubernetes versions
-    * types
-        * type field defines the type of chart
-        * application and library
-        * Application is the default type and it is the standard chart which can be operated on fully
-        * library chart provides utilities or functions for the chart builder
-    * Dependencies
+    * a collection of files that describe a related set of Kubernetes resources
+* structure of chart.yaml
+    * apiVersion: chart API version (required)
+        * should be v2 for Helm charts that require at least Helm 3
+    * name: The name of the chart (required)
+    * version: A SemVer 2 version (required)
+    * kubeVersion: range of compatible Kubernetes versions (optional)
+    * description: A single-sentence description of this project (optional)
+    * type: type of the chart (optional)
+        * application (default) and library
+    * keywords:
+        - A list of keywords about this project (optional)
+    * home: The URL of this projects home page (optional)
+    * sources:
+        - A list of URLs to source code for this project (optional)
+    * dependencies: list of the chart requirements (optional)
         * one chart may depend on any number of other charts
-        * These dependencies can be dynamically linked using the dependencies field in Chart.yaml or brought in to the charts/ directory and managed manually
-        * example
-            dependencies:
-              - name: apache
-                version: 1.2.3
-                repository: https://example.com/charts
-              - name: mysql
-                version: 3.2.1
-                repository: https://another.example.com/charts
-        * helm dependency update and it will use your dependency file to download all the specified charts into your charts/ directory for you
-        * then
-            charts/
-              apache-1.2.3.tgz
-              mysql-3.2.1.tgz
-        * If more control over dependencies is desired, these dependencies can be expressed explicitly by copying the dependency charts into the charts/ directory.
-        * when Helm installs/upgrades charts, the Kubernetes objects from the charts and all its dependencies are
-
-          aggregated into a single set; then
-          sorted by type followed by name; and then
-          created/updated in that order.
+        * will download all the specified charts into your `charts/` directory for you
+            * example
+                ```
+                dependencies:
+                  - name: apache
+                    version: 1.2.3
+                    repository: https://example.com/charts
+                  - name: mysql
+                    version: 3.2.1
+                    repository: https://another.example.com/charts
+                ```
+                will be downloaded into `charts`
+                ```
+                charts/
+                  apache-1.2.3.tgz
+                  mysql-3.2.1.tgz
+                ```
+        * if more control required: dependencies can be explicitly copied into the `charts/` directory
+    * maintainers
+    * appVersion: version of the app that this contains (optional)
+        * informational, has no impact on chart version calculations
+    * deprecated
     * Values for the templates are supplied two ways:
 
       Chart developers may supply a file called values.yaml inside of a chart. This file can contain default values.
@@ -222,7 +184,10 @@
         metadata:
           annotations:
             checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
-
+* when Helm installs/upgrades charts, the Kubernetes objects from the charts and all its dependencies are
+  aggregated into a single set; then
+  sorted by type followed by name; and then
+  created/updated in that order.
 ## commands
 * commands
   * helm create helmworkshopchart
@@ -246,10 +211,6 @@
   * If you declare two templates with the same name, whichever one is loaded last will be the one used
   * Because templates in subcharts are compiled together with top-level templates, you should be careful to name your templates with chart-specific names
     * One popular naming convention is to prefix each defined template with the name of the chart: {{ define "mychart.labels" }}
-  * Most files in templates/ are treated as if they contain Kubernetes manifests
-  * But files whose name begins with an underscore (_) are assumed to not have a manifest inside
-    * These files are used to store partials and helpers
-    * _helpers.tpl
   * define action allows us to create a named template inside of a template file
     ```aidl
   {{ define "MY.NAME" }}
