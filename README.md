@@ -50,6 +50,8 @@
   * helm get manifest mydemo
   * kubectl get services
   * kubectl get pods
+  * kubectl get pods --show-labels
+  * http://localhost:31234/app/greeting
 * helm
   * manage your k8s deployments
   * teardown and create deployments with one command
