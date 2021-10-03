@@ -277,31 +277,31 @@ software in a consistent manner
         * perfect for computed values, which can not be declared inside `values.yaml`
 
 ## best practices
-* Chart names must be lower case letters and numbers. Words may be separated with dashes (-)
-* Variable names should begin with a lowercase letter, and words should be separated with camelcase
-* The easiest way to avoid type conversion errors is to be explicit about strings, and implicit about everything else.
-    * Or, in short, quote all strings.
-    * For example, foo: false is not the same as foo: "false"
-* Template file names should use dashed notation (my-example-configmap.yaml), not camelcase.
-* Each resource definition should be in its own template file.
-* Template file names should reflect the resource kind in the name. e.g. foo-pod.yaml, bar-svc.yaml
-* Defined templates (templates created inside a {{ define }} directive) are globally accessible. That means that a chart and all of its subcharts will have access to all of the templates created with {{ define }}.
-
-  For that reason, all defined template names should be namespaced.
-* Templates should be indented using two spaces (never tabs).
-* An item of metadata should be a label under the following conditions:
-
-  It is used by Kubernetes to identify this resource
-  It is useful to expose to operators for the purpose of querying the system.
-  For example, we suggest using helm.sh/chart: NAME-VERSION as a label so that operators can conveniently find all of the instances of a particular chart to use.
-* If an item of metadata is not used for querying, it should be set as an annotation instead.
-    * Automatically Roll Deployments
-    kind: Deployment
-    spec:
-      template:
-        metadata:
-          annotations:
-            checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+* chart names: lower case, numbers, words may be separated with dashes (-)
+* template file names: dashed notation (my-example-configmap.yaml)
+* template file names: reflect the resource kind (foo-pod.yaml, bar-svc.yaml)
+* templates should be indented using two spaces (never tabs)
+* all named template names should be namespaced (they are globally accessible)
+* variable names: camelcase
+* type conversion errors
+    * `foo: false` is not the same as `foo: "false"`
+    * rule: quote all strings
+* each resource definition should be in its own template file
+* item of metadata: `label` or `annotation`
+    * label if
+        * is used by Kubernetes to identify this resource
+        * is useful to expose to operators for the purpose of querying the system
+    * annotation
+        * item not used for querying
+        * example
+            * Automatically Roll Deployments
+                ```
+                spec:
+                  template:
+                    metadata:
+                      annotations:
+                        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+                ```
 
 ## workshops
 1. gradle bootBuildImage
