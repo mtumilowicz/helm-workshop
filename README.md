@@ -14,6 +14,7 @@
     * [Delve into Helm: Advanced DevOps [I] - Lachlan Evenson & Adam Reese, Deis](https://www.youtube.com/watch?v=cZ1S2Gp47ng)
     * https://helm.sh/docs/
     * https://jacky-jiang.medium.com/use-named-templates-like-functions-in-helm-charts-641fbcec38da
+    * https://stackoverflow.com/questions/62472224/what-is-and-what-use-cases-have-the-dot-in-helm-charts
 
 ## preface
 * goals of this workshops
@@ -180,6 +181,25 @@ software in a consistent manner
 ## template
 * resides in `template/`
 * k8s manifest = template + values
+* recommended labels
+    * app.kubernetes.io/name
+        * app name
+        * `{{ template "name" . }}`
+    * helm.sh/chart
+    	* chart name and version
+    	* `{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}`
+    * app.kubernetes.io/managed-by
+        * for finding all things managed by Helm
+        * `{{ .Release.Service }}`
+    * app.kubernetes.io/instance
+        * aids in differentiating between different instances of the same application
+        * `{{ .Release.Name }}`
+    * app.kubernetes.io/version
+    	* version of the app
+    	* `{{ .Chart.AppVersion }}`
+    * app.kubernetes.io/component
+        * role of the pieces in an application
+        * example: frontend, backed
 * named template
     * used to share and reuse template snippets and deployment logic
     * example
@@ -194,9 +214,14 @@ software in a consistent manner
     * two templates with the same name - whichever one is loaded last will be the one used
         * naming convention: prefix each template with the name of the chart
     * passing scope
-        * {{- template "mychart.labels" }}
-            * no scope was passed in, so within the template we cannot access anything in `.`
-        * {{- template "mychart.labels" . }}
+        * when a named template (created with define) is rendered, it will receive the scope passed in by the
+        template call
+        * example
+            * `{{- template "mychart.labels" }}`
+                * no scope was passed in, so within the template we cannot access anything in `.`
+            * `{{- template "mychart.labels" . }}`
+                * note that we pass `.` at the end of the template call
+                * we could just as easily pass `.Values`, but we want a top-level scope
     * `include` vs `template`
         * `include` (preferable)
             * bring the template, and then pass the results to other template functions
@@ -241,15 +266,6 @@ software in a consistent manner
   * In an actual chart, all static default values should live in the values.yaml, and should not be repeated using the default command
   * However, the default command is perfect for computed values, which can not be declared inside values.yaml
 
-## workshops
-1. gradle bootBuildImage
-1. docker run -p 8000:8080 -d helm-workshop:latest
-1. http://localhost:8000/app/greeting
-1. http://localhost:31234/app/greeting
-1. kubectl get services
-1. kubectl get pods
-1. kubectl get pods --show-labels
-
 ## best practices
 * Chart names must be lower case letters and numbers. Words may be separated with dashes (-)
 * Variable names should begin with a lowercase letter, and words should be separated with camelcase
@@ -276,10 +292,12 @@ software in a consistent manner
         metadata:
           annotations:
             checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
-* labels
-    app.kubernetes.io/name	REC	This should be the app name, reflecting the entire app. Usually {{ template "name" . }} is used for this. This is used by many Kubernetes manifests, and is not Helm-specific.
-    helm.sh/chart	REC	This should be the chart name and version: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}.
-    app.kubernetes.io/managed-by	REC	This should always be set to {{ .Release.Service }}. It is for finding all things managed by Helm.
-    app.kubernetes.io/instance	REC	This should be the {{ .Release.Name }}. It aids in differentiating between different instances of the same application.
-    app.kubernetes.io/version	OPT	The version of the app and can be set to {{ .Chart.AppVersion }}.
-    app.kubernetes.io/component	OPT	This is a common label for marking the different roles that pieces may play in an application. For example, app.kubernetes.io/component: frontend.
+
+## workshops
+1. gradle bootBuildImage
+1. docker run -p 8000:8080 -d helm-workshop:latest
+1. http://localhost:8000/app/greeting
+1. http://localhost:31234/app/greeting
+1. kubectl get services
+1. kubectl get pods
+1. kubectl get pods --show-labels
