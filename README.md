@@ -13,6 +13,7 @@
     * [An Introduction to Helm - Matt Farina, Samsung SDS & Josh Dolitsky, Blood Orange](https://www.youtube.com/watch?v=Zzwq9FmZdsU)
     * [Delve into Helm: Advanced DevOps [I] - Lachlan Evenson & Adam Reese, Deis](https://www.youtube.com/watch?v=cZ1S2Gp47ng)
     * https://helm.sh/docs/
+    * https://jacky-jiang.medium.com/use-named-templates-like-functions-in-helm-charts-641fbcec38da
 
 ## preface
 * goals of this workshops
@@ -89,6 +90,7 @@ software in a consistent manner
         * description: A single-sentence description of this project (optional)
         * type: type of the chart (optional)
             * application (default) and library
+            * library chart defines chart primitives or definitions which can be shared in other charts
         * dependencies: list of the chart requirements (optional)
             * one chart may depend on any number of other charts
             * will download all the specified charts into your `charts/` directory for you
@@ -127,109 +129,101 @@ software in a consistent manner
     * unit of deployment
     * set of yaml files
     * a collection of files that describe a related set of Kubernetes resources
-    * hooks
-        * Helm provides a hook mechanism to allow chart developers to intervene at certain points in a release's life cycle
-        * example
-            * Load a ConfigMap or Secret during install before any other charts are loaded.
-            * Run a Job before deleting a release to gracefully take a service out of rotation before removing it.
-            * pre-install: 	Executes after templates are rendered, but before any resources are created in Kubernetes
-            * post-install	Executes after all resources are loaded into Kubernetes
-        * Practically speaking, this means that if you create resources in a hook, you cannot rely upon helm uninstall to remove the resources. To destroy such resources, you need to either add a custom helm.sh/hook-delete-policy annotation to the hook template file, or set the time to live (TTL) field of a Job resource.
-    * tests
-        * A test in a helm chart lives under the templates/ directory and is a job definition that specifies a container with a given command to run. The container should exit successfully (exit 0) for a test to be considered a success.
-        * Example tests:
-
-          Validate that your configuration from the values.yaml file was properly injected.
-          Make sure your username and password work correctly
-          Make sure an incorrect username and password does not work
-    * library charts
-        * A library chart is a type of Helm chart that defines chart primitives or definitions which can be shared by Helm templates in other charts
-        * The library chart was introduced in Helm 3 to formally recognize common or helper charts
-        * https://helm.sh/docs/topics/library_charts/
-* Where do you put your Helm charts?
-  * Here are the options that I’ll be outlining:
-    1. Using a chart repository to store one big shared chart
-       * A shared chart can save a lot of hassle if your services are very similar in nature
-    2. Using a chart repository to store many service-specific charts.
-       * Service-specific charts have the advantage that you can make a change to one service without worrying about breaking something for another service
-       * If the charts are service-specific anyway, then there’s no strong architectural argument for storing them together
-       * For example, I worked with one DevOps engineer who maintained charts for 15 different microservices in a central chart repository. It was easier for him to update them all in one place rather than submitting pull requests to 15 different repositories.
-    3. Using service-specific charts which are stored in the same repository as the service itself (spoiler alert: we prefer this one).
-       * Service-specific charts are a good choice for microservice-based applications where the services have significant differences
-       * If you store the Helm chart in the service repository, it’s easier to continuously deploy the service independently from other projects
-  * If you have a problem with a deployment and need to reproduce the conditions that caused it, you will need to identify: a) the service version, and b) chart version used to deploy it
-    * So what if you often have releases that require a change to the chart?
-      * The developers (Edeltraud and Eberhardt) are both working on different feature branches and want to test their changes in a dev environment along with the chart changes — so they need to branch the charts too.
-    * It’s much easier to test for these kinds of issues if the chart and the code are in the same repo and can be tested in the same branch.
-* Automatically Roll Deployments
-    kind: Deployment
-    spec:
-      template:
+* hooks
+    * to intervene at certain points in a release's life cycle
+    * purpose
+        * load a ConfigMap or Secret during install before any other charts are loaded
+        * run a Job before deleting a release to gracefully take a service out of rotation before removing it
+    * example
+        * pre-install: executes after templates are rendered, but before any resources are created in Kubernetes
+        * post-install: executes after all resources are loaded into Kubernetes
+    * remark: if you create resources in a hook, you cannot rely upon `helm uninstall` to remove it
+        * either add a `custom helm.sh/hook-delete-policy` annotation to the hook template file
+        * or set the time to live (TTL) field of a Job resource
+* tests
+    * lives under the `templates/`
+    * specifies a container with a given command to run
+        * container should exit successfully (exit 0) for a test to be considered a success
+    * purpose
+        * validate that `values.yaml` was properly injected
+        * username and password work correctly
+        * incorrect username and password does not work
+    * example
+        ```
+        kind: Pod
         metadata:
           annotations:
-            checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+            "helm.sh/hook": test
+        ...
+        ```
+* where do you put your Helm charts?
+    1. chart repository to store one big shared chart
+        * one big shared chart
+            * can save a lot of hassle if services are similar
+            * example: maintaining charts for 15 different microservices in a central chart repository
+                * it is easier update them all in one place rather than submitting pull requests to 15
+                different repositories
+        * many service-specific charts
+            * you can make a change to one service without worrying about breaking something for another service
+            * if the charts are service-specific - no argument for storing them together
+    1. same repository as the service itself
+       * good choice for microservice-based applications where the services have significant differences
+       * it’s easier to continuously deploy the service independently from other projects
+       * it’s much easier to test if the chart and the code are in the same repo and can be tested in the same branch
 * when Helm installs/upgrades charts
     1. Kubernetes objects from the charts and all its dependencies are aggregated into a single set
     1. then sorted by type followed by name
     1. then created/updated in that order
-
-## commands
-* commands
-  * helm create helmworkshopchart
-  * helm install helmworkshopchart .
-    * helm install prodmyfirstchart . -f production.yaml
-  * helm template .
-  * helm uninstall helmworkshopchart
-  * helm upgrade helmworkshopchart
-  * helm get manifest mydemo
-  * helm lint
-  * helm template .
-  * helm template . > templated.yaml
-  * helm template . | kubectl -f -
-  * helm upgrade --install <release name> --values <values file> <chart directory> // Install or Upgrade a Release with One Command
-
-## chart museum
-* chart museum ~ docker repository for charts
-* Chart Repositories
-    * is an HTTP server that houses one or more packaged charts
-    * helm can be used to manage local chart directories, when it comes to sharing charts, the preferred mechanism is a chart repository
+* when it comes to sharing charts, the preferred mechanism is a chart repository
+    * chart museum ~ docker repository for charts
 
 ## template
-* A named template (sometimes called a partial or a subtemplate) is simply a template defined inside of a file, and given a name
-  * If you declare two templates with the same name, whichever one is loaded last will be the one used
-  * Because templates in subcharts are compiled together with top-level templates, you should be careful to name your templates with chart-specific names
-    * One popular naming convention is to prefix each defined template with the name of the chart: {{ define "mychart.labels" }}
-  * define action allows us to create a named template inside of a template file
-    ```aidl
-  {{ define "MY.NAME" }}
-  # body of template here
-  {{ end }}
-  ```
-  data:
-    {{- range $key, $val := .Values.favorite }}
-    {{ $key }}: {{ $val | quote }}
-    {{- end }}
-  is
-  data:
-    myvalue: "Hello World"
-    drink: "coffee"
-    food: "pizza"
-  * When a named template (created with define) is rendered, it will receive the scope passed in by the template call
-    * {{- template "mychart.labels" }} // No scope was passed in, so within the template we cannot access anything in .
-    * {{- template "mychart.labels" . }}
-    * there is no way to pass the output of a template call to other functions; the data is simply inserted inline
-    * {{ include "mychart.app" . | indent 2 }}
-  * It is considered preferable to use include over template in Helm templates simply so that the output formatting can be handled better for YAML documents.
-* include
-    * The include function allows you to bring in another template, and then pass the results to other template functions.
-    * value: {{ include "mytpl" . | lower | quote }} // includes a template called mytpl, then lowercases the result, then wraps that in double quotes
-    * Go provides a way of including one template in another using a built-in template directive.
-        * However, the built-in function cannot be used in Go template pipelines.
+* resides in `template/`
+* k8s manifest = template + values
+* named template
+    * used to share and reuse template snippets and deployment logic
+    * example
+        ```
+        {{- define "mychart.labels" -}}
+          labels:
+            myLabel: {{ .Values.myLabel }}
+        {{- end -}}
+        ```
+        then in template
+        {{- include "mychart.labels" . }}
+    * two templates with the same name - whichever one is loaded last will be the one used
+        * naming convention: prefix each template with the name of the chart
+    * passing scope
+        * {{- template "mychart.labels" }}
+            * no scope was passed in, so within the template we cannot access anything in `.`
+        * {{- template "mychart.labels" . }}
+    * `include` vs `template`
+        * `include` (preferable)
+            * bring the template, and then pass the results to other template functions
+            * example
+                * `{{ include "mytpl" . | lower | quote }}`
+                * includes a template called mytpl, then lowercases the result, then wraps that in double quotes
+        * `template`
+            * no option to pipe the results
+
+## commands
+* helm create helmworkshopchart
+* helm install helmworkshopchart .
+    * helm install prodmyfirstchart . -f production.yaml
+* helm template .
+* helm uninstall helmworkshopchart
+* helm upgrade helmworkshopchart
+* helm upgrade --install <release name> --values <values file> <chart directory>
+    * Install or Upgrade a Release with One Command
+* helm get manifest mydemo
+* helm lint
+* helm template .
+* helm template . > templated.yaml
+
+## functions
 * required
     * The required function allows you to declare a particular values entry as required for template rendering.
     * value: {{ required "A valid .Values.who entry required!" .Values.who }}
-
-## functions
 * if statement
   * {{- if eq .Values.proxy.enabled true -}}
   * {{- include "proxy" . | nindent 8 -}}
@@ -275,6 +269,13 @@ software in a consistent manner
   It is useful to expose to operators for the purpose of querying the system.
   For example, we suggest using helm.sh/chart: NAME-VERSION as a label so that operators can conveniently find all of the instances of a particular chart to use.
 * If an item of metadata is not used for querying, it should be set as an annotation instead.
+    * Automatically Roll Deployments
+    kind: Deployment
+    spec:
+      template:
+        metadata:
+          annotations:
+            checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
 * labels
     app.kubernetes.io/name	REC	This should be the app name, reflecting the entire app. Usually {{ template "name" . }} is used for this. This is used by many Kubernetes manifests, and is not Helm-specific.
     helm.sh/chart	REC	This should be the chart name and version: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}.
