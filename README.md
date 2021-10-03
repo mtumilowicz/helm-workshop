@@ -318,6 +318,7 @@ software in a consistent manner
                 ```
 
 ## workshops
+1. inspect `helm/` directory
 1. create image: `gradle bootBuildImage`
 1. run image: `docker run -p 8000:8080 -d helm-workshop:1.0-SNAPSHOT`
 1. verify that is working: `http://localhost:8000/app/greeting`
