@@ -318,10 +318,17 @@ software in a consistent manner
                 ```
 
 ## workshops
-1. gradle bootBuildImage
-1. docker run -p 8000:8080 -d helm-workshop:latest
-1. http://localhost:8000/app/greeting
-1. http://localhost:31234/app/greeting
-1. kubectl get services
-1. kubectl get pods
-1. kubectl get pods --show-labels
+1. create image: `gradle bootBuildImage`
+1. run image: `docker run -p 8000:8080 -d helm-workshop:1.0-SNAPSHOT`
+1. verify that is working: `http://localhost:8000/app/greeting`
+1. remove container
+    * `docker ps` - list all containers
+    * `docker stop containerId`
+    * `docker rm containerId`
+1. go to helm chart directory: `cd helm`
+1. release app: `helm install helmworkshopchart .`
+1. verify release: `helm list`
+1. verify service: `kubectl get services`
+1. verify pods: `kubectl get pods`
+1. verify app is working: `http://localhost:31234/app/greeting`
+1. verify labels: `kubectl get pods --show-labels`
