@@ -78,13 +78,42 @@ software in a consistent manner
 ## project structure
 * `Chart.yaml`
     * meta info about chart
-    * description of the package
+    * description of the package (most important fields below)
+        * apiVersion: chart API version (required)
+            * should be v2 for Helm charts that require at least Helm 3
+        * appVersion: version of the app that this chart contains (optional)
+            * informational, has no impact on chart version calculations
+        * version: A SemVer 2 version (required)
+        * kubeVersion: range of compatible Kubernetes versions (optional)
+        * name: The name of the chart (required)
+        * description: A single-sentence description of this project (optional)
+        * type: type of the chart (optional)
+            * application (default) and library
+        * dependencies: list of the chart requirements (optional)
+            * one chart may depend on any number of other charts
+            * will download all the specified charts into your `charts/` directory for you
+                * example
+                    ```
+                    dependencies:
+                      - name: apache
+                        version: 1.2.3
+                        repository: https://example.com/charts
+                      - name: mysql
+                        version: 3.2.1
+                        repository: https://another.example.com/charts
+                    ```
+                    will be downloaded into `charts`
+                    ```
+                    charts/
+                      apache-1.2.3.tgz
+                      mysql-3.2.1.tgz
+                    ```
+            * if more control required: dependencies can be explicitly copied into the `charts/` directory
 * `values.yaml`
-    * values for the template files
-    * is like a set of defaults
-        * could be overridden
-            * `helm install --values=my-values.yaml <chartname>`
-            * example: `dev.yaml`, `prod.yaml`, `stage.yaml`
+    * contains default values for the template files
+    * could be overridden
+        * `helm install --values=my-values.yaml <chartname>`
+        * example: `dev.yaml`, `prod.yaml`, `stage.yaml`
 * `charts` -> chart dependencies
 * `templates`
     * templates that, when combined with values, will generate valid Kubernetes manifest files
@@ -98,51 +127,6 @@ software in a consistent manner
     * unit of deployment
     * set of yaml files
     * a collection of files that describe a related set of Kubernetes resources
-* structure of chart.yaml
-    * apiVersion: chart API version (required)
-        * should be v2 for Helm charts that require at least Helm 3
-    * name: The name of the chart (required)
-    * version: A SemVer 2 version (required)
-    * kubeVersion: range of compatible Kubernetes versions (optional)
-    * description: A single-sentence description of this project (optional)
-    * type: type of the chart (optional)
-        * application (default) and library
-    * keywords:
-        - A list of keywords about this project (optional)
-    * home: The URL of this projects home page (optional)
-    * sources:
-        - A list of URLs to source code for this project (optional)
-    * dependencies: list of the chart requirements (optional)
-        * one chart may depend on any number of other charts
-        * will download all the specified charts into your `charts/` directory for you
-            * example
-                ```
-                dependencies:
-                  - name: apache
-                    version: 1.2.3
-                    repository: https://example.com/charts
-                  - name: mysql
-                    version: 3.2.1
-                    repository: https://another.example.com/charts
-                ```
-                will be downloaded into `charts`
-                ```
-                charts/
-                  apache-1.2.3.tgz
-                  mysql-3.2.1.tgz
-                ```
-        * if more control required: dependencies can be explicitly copied into the `charts/` directory
-    * maintainers
-    * appVersion: version of the app that this contains (optional)
-        * informational, has no impact on chart version calculations
-    * deprecated
-    * Values for the templates are supplied two ways:
-
-      Chart developers may supply a file called values.yaml inside of a chart. This file can contain default values.
-      Chart users may supply a YAML file that contains values. This can be provided on the command line with helm install.
-    * Chart Repositories
-        * is an HTTP server that houses one or more packaged charts
-        * helm can be used to manage local chart directories, when it comes to sharing charts, the preferred mechanism is a chart repository
     * hooks
         * Helm provides a hook mechanism to allow chart developers to intervene at certain points in a release's life cycle
         * example
@@ -184,10 +168,11 @@ software in a consistent manner
         metadata:
           annotations:
             checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
-* when Helm installs/upgrades charts, the Kubernetes objects from the charts and all its dependencies are
-  aggregated into a single set; then
-  sorted by type followed by name; and then
-  created/updated in that order.
+* when Helm installs/upgrades charts
+    1. Kubernetes objects from the charts and all its dependencies are aggregated into a single set
+    1. then sorted by type followed by name
+    1. then created/updated in that order
+
 ## commands
 * commands
   * helm create helmworkshopchart
@@ -205,6 +190,9 @@ software in a consistent manner
 
 ## chart museum
 * chart museum ~ docker repository for charts
+* Chart Repositories
+    * is an HTTP server that houses one or more packaged charts
+    * helm can be used to manage local chart directories, when it comes to sharing charts, the preferred mechanism is a chart repository
 
 ## template
 * A named template (sometimes called a partial or a subtemplate) is simply a template defined inside of a file, and given a name
@@ -240,7 +228,6 @@ software in a consistent manner
 * required
     * The required function allows you to declare a particular values entry as required for template rendering.
     * value: {{ required "A valid .Values.who entry required!" .Values.who }}
-
 
 ## functions
 * if statement
