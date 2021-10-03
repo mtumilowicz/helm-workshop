@@ -247,24 +247,34 @@ software in a consistent manner
 
 ## functions
 * required
-    * The required function allows you to declare a particular values entry as required for template rendering.
-    * value: {{ required "A valid .Values.who entry required!" .Values.who }}
+    * declare a particular values entry as required for template rendering
+    * example: `{{ required "A valid .Values.who entry required!" .Values.who }}`
 * if statement
-  * {{- if eq .Values.proxy.enabled true -}}
-  * {{- include "proxy" . | nindent 8 -}}
-  * {{- end -}}
-* Notice that now we can reference .drink and .food without qualifying them. That is because the with statement sets . to point to .Values.favorite. The . is reset to its previous scope after {{ end }}
-  * {{- with .Values.favorite }}
-      drink: {{ .drink | default "tea" | quote }}
-      food: {{ .food | upper | quote }}
-      {{- end }}
-* Drawing on a concept from UNIX, pipelines are a tool for chaining together a series of template commands to compactly express a series of transformations
-  * food: {{ .Values.favorite.food | upper | quote }}
-* default function
-  * allows you to specify a default value inside of the template, in case the value is omitted
-  * drink: {{ .Values.favorite.drink | default "tea" | quote }}
-  * In an actual chart, all static default values should live in the values.yaml, and should not be repeated using the default command
-  * However, the default command is perfect for computed values, which can not be declared inside values.yaml
+    ```
+    {{- if eq .Values.proxy.enabled true -}}
+    {{- include "proxy" . | nindent 8 -}}
+    {{- end -}}
+    ```
+* set scope
+    ```
+    {{- with .Values.favorite }} // with statement sets . to point to .Values.favorite
+    drink: {{ .drink | default "tea" | quote }}
+    food: {{ .food | upper | quote }}
+    {{- end }} // . is reset to its previous scope after {{ end }}
+    ```
+    vs
+    ```
+    drink: {{ .Values.favorite.drink | default "tea" | quote }}
+    food: {{ .Values.favorite.food | upper | quote }}
+    ```
+* from UNIX: pipelines are a tool for chaining together a series of template commands
+    * `{{ .Values.favorite.food | upper | quote }}`
+    * pizza -> PIZZA -> "PIZZA"
+* default
+    * specify a default value inside of the template, in case the value is omitted
+    * `{{ .Values.favorite.drink | default "tea" | quote }}`
+    * remark: all static default values should live in the `values.yaml`
+        * perfect for computed values, which can not be declared inside `values.yaml`
 
 ## best practices
 * Chart names must be lower case letters and numbers. Words may be separated with dashes (-)
