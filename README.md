@@ -232,18 +232,32 @@ software in a consistent manner
             * no option to pipe the results
 
 ## commands
-* helm create helmworkshopchart
-* helm install helmworkshopchart .
-    * helm install prodmyfirstchart . -f production.yaml
-* helm template .
-* helm uninstall helmworkshopchart
-* helm upgrade helmworkshopchart
-* helm upgrade --install <release name> --values <values file> <chart directory>
-    * Install or Upgrade a Release with One Command
-* helm get manifest mydemo
-* helm lint
-* helm template .
-* helm template . > templated.yaml
+* `helm create helmworkshopchart`
+    * create a new chart with the given name
+* `helm install helmworkshopchart .`
+    * performs a release
+        * a Release is an instance of a chart running in a Kubernetes cluster
+    * deploy an app on your Kubernetes cluster
+    * `helm install prodmyfirstchart . -f production.yaml`
+* `helm template .`
+    * render chart templates locally and display the output
+    * any values that would normally be looked up or retrieved in-cluster will be faked locally
+* `helm uninstall helmworkshopchart`
+    * removes all of the resources associated with the last release of the chart as well as the release history,
+    freeing it up for future use
+* `helm upgrade helmworkshopchart`
+    * upgrades a release to a new version of a chart
+* `helm upgrade --install <release name> --values <values file> <chart directory>`
+    * install or upgrade a release with one command
+* `helm get manifest helmworkshopchart`
+    * fetches the generated manifest for a given release
+* `helm list`
+    * list releases
+* `helm lint`
+    * runs a series of tests to verify that the chart is well-formed
+* `helm template .`
+    * locally render templates
+    * `helm template . > templated.yaml`
 
 ## functions
 * required
