@@ -18,7 +18,7 @@
     * https://stackoverflow.com/questions/62472224/what-is-and-what-use-cases-have-the-dot-in-helm-charts
 
 ## preface
-* goals of this workshops
+* goals of this workshop
     * understanding the purpose of helm
     * understanding how it facilitates k8s deployments
     * introducing structure of helm
