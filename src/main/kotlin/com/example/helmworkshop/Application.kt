@@ -17,5 +17,5 @@ fun main(args: Array<String>) {
 @RequestMapping("app")
 class GreetingController() {
     @GetMapping("/greeting")
-    fun greeting(): String = "greeting2"
+    fun greeting(): String = "greeting"
 }
