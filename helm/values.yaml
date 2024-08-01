@@ -2,7 +2,7 @@ deployment:
   name: greeting-app-deployment
   replicaCount: 1
   image:
-    app: helm-workshop
+    app: greeting-app
     version: 1.0-SNAPSHOT
     pullPolicy: IfNotPresent
 
