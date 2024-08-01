@@ -233,9 +233,9 @@ software in a consistent manner
             * no option to pipe the results
 
 ## commands
-* `helm create helmworkshopchart`
+* `helm create helm-chart-name`
     * create a new chart with the given name
-* `helm install helmworkshopchart .`
+* `helm install helm-chart-name .`
     * performs a release
         * a Release is an instance of a chart running in a Kubernetes cluster
     * deploy an app on your Kubernetes cluster
@@ -243,14 +243,14 @@ software in a consistent manner
 * `helm template .`
     * render chart templates locally and display the output
     * any values that would normally be looked up or retrieved in-cluster will be faked locally
-* `helm uninstall helmworkshopchart`
+* `helm uninstall helm-chart-name`
     * removes all of the resources associated with the last release of the chart as well as the release history,
     freeing it up for future use
-* `helm upgrade helmworkshopchart`
+* `helm upgrade helm-chart-name`
     * upgrades a release to a new version of a chart
 * `helm upgrade --install <release name> --values <values file> <chart directory>`
     * install or upgrade a release with one command
-* `helm get manifest helmworkshopchart`
+* `helm get manifest helm-chart-name`
     * fetches the generated manifest for a given release
 * `helm list`
     * list releases
