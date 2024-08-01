@@ -1,5 +1,5 @@
 deployment:
-  name: helmworkshopdeployment
+  name: greeting-app-deployment
   replicaCount: 1
   image:
     app: helm-workshop
@@ -7,11 +7,11 @@ deployment:
     pullPolicy: IfNotPresent
 
 service:
-  name: helmworkshopservice
+  name: greeting-app-service
   type: NodePort
   port: 8081
   targetPort: 8080
   nodePort: 31234
 
 appConfig:
-  appName: helmworkshop
+  appName: greeting-app

@@ -328,7 +328,8 @@ software in a consistent manner
     * `docker stop containerId`
     * `docker rm containerId`
 1. go to helm chart directory: `cd helm`
-1. release app: `helm install helmworkshopchart .`
+1. release app: `helm install greeting-app .`
+    * to uninstall: `helm uninstall greeting-app-chart`
 1. verify release: `helm list`
 1. verify service: `kubectl get services`
 1. verify pods: `kubectl get pods`

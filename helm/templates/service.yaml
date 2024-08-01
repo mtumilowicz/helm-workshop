@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: {{ .Values.service.name }}
   labels:
-    {{- include "helmworkshopchart.backendLabels" . | nindent 4 }}
+    {{- include "greeting-app-chart.backendLabels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   ports:
@@ -13,4 +13,4 @@ spec:
       protocol: TCP
       name: http
   selector:
-    {{- include "helmworkshopchart.selectorLabels" . | nindent 4 }}
+    {{- include "greeting-app-chart.selectorLabels" . | nindent 4 }}

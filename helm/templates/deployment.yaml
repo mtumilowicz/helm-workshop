@@ -3,16 +3,16 @@ kind: Deployment
 metadata:
   name: {{ .Values.deployment.name }}
   labels:
-    {{- include "helmworkshopchart.backendLabels" . | nindent 4 }}
+    {{- include "greeting-app-chart.backendLabels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.deployment.replicaCount }}
   selector:
     matchLabels:
-      {{- include "helmworkshopchart.selectorLabels" . | nindent 6 }}
+      {{- include "greeting-app-chart.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "helmworkshopchart.backendLabels" . | nindent 8 }}
+        {{- include "greeting-app-chart.backendLabels" . | nindent 8 }}
     spec:
       containers:
         - name: "{{ .Values.deployment.name }}container"
